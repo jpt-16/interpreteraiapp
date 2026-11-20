@@ -12,6 +12,8 @@ export interface Token {
   text: string;
   /** Numeric interpretations, if the token is (or stands for) a number. */
   nums?: number[];
+  /** True for ordinal words ("third", "primero"), which rarely signal added facts. */
+  ordinal?: boolean;
 }
 
 const RAW_TOKEN = /[a-zñ]+\d*|\d+(?:[.,:]\d+)*|%/g;
@@ -48,6 +50,7 @@ const SCALES: Record<string, number> = {
 const ARTICLE_ONES = new Set(["a", "an", "un", "una"]);
 const CONNECTORS = new Set(["and", "y"]);
 const DECIMAL_WORDS = new Set(["point", "coma", "punto"]);
+const RANGE_WORDS = new Set(["and", "to", "or", "y", "a", "o"]);
 
 type L = "en" | "es" | undefined;
 
@@ -102,6 +105,10 @@ export function tokenize(input: string, lang?: L): Token[] {
     if (/^\d/.test(w)) {
       let nums = digitCandidates(w);
       const next = raw[i + 1];
+      // "between 190 and 195 million": the scale word applies to both numbers
+      if (next && RANGE_WORDS.has(next) && /^\d/.test(raw[i + 2] ?? "") && raw[i + 3] && raw[i + 3] in SCALES) {
+        nums = nums.flatMap((n) => [n, n * SCALES[raw[i + 3]]]);
+      }
       if (next && next in SCALES) {
         nums = nums.flatMap((n) => [n, n * SCALES[next]]);
         out.push({ text: w, nums });
@@ -210,7 +217,8 @@ export function tokenize(input: string, lang?: L): Token[] {
       i++;
       continue;
     }
-    out.push({ text: raw.slice(i, i + consumed).join(" "), nums: [value] });
+    const ordinal = consumed === 1 && (w in EN_ORDINAL || w === "primero");
+    out.push({ text: raw.slice(i, i + consumed).join(" "), nums: [value], ordinal });
     i += consumed;
   }
   return out;
@@ -222,7 +230,7 @@ export function numbersIn(tokens: Token[]): number[] {
 
 /** Numbers as they occur, one entry per numeric token. */
 export function numberMentions(tokens: Token[]) {
-  const mentions: { text: string; nums: number[] }[] = [];
+  const mentions: { text: string; nums: number[]; ordinal?: boolean }[] = [];
   tokens.forEach((t, idx) => {
     if (!t.nums) return;
     // "10 30" spoken time → also offer 10.30
@@ -231,7 +239,7 @@ export function numberMentions(tokens: Token[]) {
     if (next?.nums && t.nums[0] <= 24 && next.nums[0] < 60 && Number.isInteger(t.nums[0]) && Number.isInteger(next.nums[0])) {
       nums.push(t.nums[0] + next.nums[0] / 100);
     }
-    mentions.push({ text: t.text, nums });
+    mentions.push({ text: t.text, nums, ordinal: t.ordinal });
   });
   return mentions;
 }

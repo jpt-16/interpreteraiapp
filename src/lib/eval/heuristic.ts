@@ -62,6 +62,7 @@ export function evaluateHeuristic(req: EvaluationRequest): Evaluation {
   const unexplained = mentions.filter(
     (m) =>
       !m.nums.some((n) => unitValues.some((v) => approxEqual(n, v)) || sourceNums.some((v) => approxEqual(n, v))) &&
+      !m.ordinal &&
       m.nums.every((n) => n > 1),
   );
 
