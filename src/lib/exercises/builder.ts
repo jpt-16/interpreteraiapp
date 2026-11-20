@@ -111,9 +111,9 @@ export function exerciseInstructions(config: ExerciseConfig) {
   return EXERCISE_TYPES[config.type].instructions;
 }
 
-/** Encode / decode a configuration in URL search params. */
-export function configToParams(c: ExerciseConfig) {
-  const p = new URLSearchParams({
+/** Plain-object form of a configuration (used for router params, which avoids URLSearchParams). */
+export function configToRecord(c: ExerciseConfig): Record<string, string> {
+  const r: Record<string, string> = {
     type: c.type,
     src: c.sourceLang,
     tgt: c.targetLang,
@@ -121,27 +121,36 @@ export function configToParams(c: ExerciseConfig) {
     subject: c.subject,
     len: c.length,
     content: c.contentSource,
-  });
-  if (c.scenarioId) p.set("scenario", c.scenarioId);
-  return p.toString();
+  };
+  if (c.scenarioId) r.scenario = c.scenarioId;
+  return r;
 }
 
-export function configFromParams(p: URLSearchParams): ExerciseConfig | null {
-  const type = p.get("type") as ExerciseConfig["type"] | null;
+export function configFromRecord(p: Record<string, string | undefined>): ExerciseConfig | null {
+  const type = p.type as ExerciseConfig["type"] | undefined;
   if (!type || !(type in EXERCISE_TYPES)) return null;
-  const lang = (v: string | null, d: "en" | "es") => (v === "en" || v === "es" ? v : d);
-  const diff = Number(p.get("diff"));
-  const subject = (p.get("subject") ?? "medical") as ExerciseConfig["subject"];
-  const len = (p.get("len") ?? "medium") as ExerciseConfig["length"];
-  const content = (p.get("content") ?? "library") as ExerciseConfig["contentSource"];
+  const lang = (v: string | undefined, d: "en" | "es") => (v === "en" || v === "es" ? v : d);
+  const diff = Number(p.diff);
+  const subject = (p.subject ?? "medical") as ExerciseConfig["subject"];
+  const len = (p.len ?? "medium") as ExerciseConfig["length"];
+  const content = (p.content ?? "library") as ExerciseConfig["contentSource"];
   return normalizeConfig({
     type,
-    sourceLang: lang(p.get("src"), "en"),
-    targetLang: lang(p.get("tgt"), "es"),
+    sourceLang: lang(p.src, "en"),
+    targetLang: lang(p.tgt, "es"),
     difficulty: (diff >= 1 && diff <= 5 ? diff : 2) as ExerciseConfig["difficulty"],
     subject: subject in SUBJECTS ? subject : "medical",
     length: len in AUDIO_LENGTH ? len : "medium",
     contentSource: ["library", "generated", "ai"].includes(content) ? content : "library",
-    scenarioId: p.get("scenario") ?? undefined,
+    scenarioId: p.scenario ?? undefined,
   });
+}
+
+/** Encode / decode a configuration in URL search params (web). */
+export function configToParams(c: ExerciseConfig) {
+  return new URLSearchParams(configToRecord(c)).toString();
+}
+
+export function configFromParams(p: URLSearchParams): ExerciseConfig | null {
+  return configFromRecord(Object.fromEntries(p.entries()));
 }

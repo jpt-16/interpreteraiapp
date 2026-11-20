@@ -8,7 +8,7 @@ import { buildExercise, configFromParams, estimateDuration, speechRateFor } from
 import { getScenario } from "@/lib/exercises/scenarios";
 import type { Exercise, ExerciseConfig, MeaningUnit } from "@/lib/types";
 import { ExerciseRunner } from "./ExerciseRunner";
-import { planFromExercise, planFromScenario, type ExercisePlan } from "./plan";
+import { planFromExercise, planFromScenario, type ExercisePlan } from "@/lib/exercises/plan";
 
 interface GeneratedPassage {
   title: string;

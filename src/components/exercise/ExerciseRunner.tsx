@@ -14,7 +14,7 @@ import { DIFFICULTY, EXERCISE_TYPES, LANGUAGES, langPairLabel } from "@/lib/exer
 import { hasSpeechRecognition, startRecognizer, type LiveRecognizer } from "@/lib/speech/browser";
 import type { Evaluation, PracticeSession, TranscriptionSource } from "@/lib/types";
 import { EvaluationReport } from "./EvaluationReport";
-import type { ExercisePlan } from "./plan";
+import type { ExercisePlan } from "@/lib/exercises/plan";
 import { usePassagePlayer } from "./usePassagePlayer";
 import { useRecorder } from "./useRecorder";
 import { LiveWaveform, PassageWaveform } from "./Waveform";
