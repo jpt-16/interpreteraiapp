@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { analyzeWeaknesses } from "@/lib/coach/analyze";
 import { getBrowserSupabase } from "@/lib/supabase/client";
@@ -45,6 +46,7 @@ interface DataState {
 const DataContext = createContext<DataState | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const repo = useMemo<Repository>(() => {
     const sb = getBrowserSupabase();
     return sb ? createSupabaseRepository(sb) : createLocalRepository();
@@ -65,7 +67,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const sb = getBrowserSupabase();
         if (sb) {
           const { data } = await sb.auth.getUser();
-          if (!cancelled) setUser(data.user ? { email: data.user.email ?? null } : null);
+          if (cancelled) return;
+          setUser(data.user ? { email: data.user.email ?? null } : null);
+          if (!data.user) return; // signed out (e.g. on /login): nothing to load
         }
         const [p, s, t] = await Promise.all([repo.getPreferences(), repo.listSessions(), repo.listTerms()]);
         if (cancelled) return;
@@ -157,7 +161,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async signOut() {
       const sb = getBrowserSupabase();
       await sb?.auth.signOut();
-      window.location.href = "/login";
+      router.push("/login");
+      router.refresh();
     },
   };
 

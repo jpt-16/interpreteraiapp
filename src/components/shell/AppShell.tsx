@@ -2,7 +2,7 @@
 import { AudioLines, BookText, LayoutDashboard, LineChart, Menu, MessagesSquare, Settings, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useData } from "@/lib/data/store";
 import { cn } from "@/components/ui/cn";
 import { Logo } from "./Logo";
@@ -72,9 +72,7 @@ function StatusFooter() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
   const { mode, error } = useData();
-  useEffect(() => setOpen(false), [pathname]);
 
   return (
     <div className="flex min-h-screen">

@@ -50,47 +50,53 @@ async function fetchAiExercise(config: ExerciseConfig, rateMultiplier: number): 
 export function ExerciseLoader() {
   const params = useSearchParams();
   const { ready, prefs, sessions } = useData();
-  const [plan, setPlan] = useState<ExercisePlan | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [invalid, setInvalid] = useState(false);
+  const [loaded, setLoaded] = useState<{ key: string; plan: ExercisePlan | null; notice: string | null } | null>(null);
   const [nonce, setNonce] = useState(0);
+  const query = params.toString();
+  const key = `${nonce}|${query}`;
 
-  const load = useCallback(async () => {
-    const config = configFromParams(new URLSearchParams(params.toString()));
-    if (!config) {
-      setInvalid(true);
-      return;
-    }
+  const build = useCallback(async (): Promise<{ plan: ExercisePlan | null; notice: string | null }> => {
+    const config = configFromParams(new URLSearchParams(query));
+    if (!config) return { plan: null, notice: null };
     if (config.type === "dialogue") {
       const scenario = getScenario(config.scenarioId);
-      if (!scenario) return setInvalid(true);
-      setPlan(planFromScenario(scenario, prefs.speechRateMultiplier));
-      return;
+      return { plan: scenario ? planFromScenario(scenario, prefs.speechRateMultiplier) : null, notice: null };
     }
+    let notice: string | null = null;
     if (config.contentSource === "ai") {
       const ai = await fetchAiExercise(config, prefs.speechRateMultiplier);
-      if (ai) {
-        setPlan(planFromExercise(ai));
-        return;
-      }
-      setNotice("AI passage generation is unavailable, so a curated passage was used instead.");
+      if (ai) return { plan: planFromExercise(ai), notice: null };
+      notice = "AI passage generation is unavailable, so a curated passage was used instead.";
     }
-    const recentIds = sessions.slice(0, 5).map((s) => s.exerciseTitle);
+    const recentTitles = sessions.slice(0, 5).map((s) => s.exerciseTitle);
     const exercise = buildExercise(
       { ...config, contentSource: config.contentSource === "ai" ? (config.type === "info-retention" ? "generated" : "library") : config.contentSource },
-      { rateMultiplier: prefs.speechRateMultiplier, avoidPassageIds: recentIds },
+      { rateMultiplier: prefs.speechRateMultiplier, avoidPassageIds: recentTitles },
     );
-    setPlan(planFromExercise(exercise));
-  }, [params, prefs.speechRateMultiplier, sessions]);
+    return { plan: planFromExercise(exercise), notice };
+  }, [query, prefs.speechRateMultiplier, sessions]);
 
   useEffect(() => {
     if (!ready) return;
-    setPlan(null);
-    load();
+    let cancelled = false;
+    build().then((r) => {
+      if (!cancelled) setLoaded({ key, ...r });
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Rebuild only when the request (params or "new passage") changes, not when history updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, nonce, params]);
+  }, [ready, key]);
 
-  if (invalid)
+  if (!loaded || loaded.key !== key)
+    return (
+      <div className="flex min-h-screen items-center justify-center gap-2 text-[13px] text-muted">
+        <Loader2 size={16} className="animate-spin" /> Preparing exercise…
+      </div>
+    );
+
+  if (!loaded.plan)
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 text-center">
         <p className="text-ink-2">This exercise link is not valid.</p>
@@ -98,17 +104,10 @@ export function ExerciseLoader() {
       </div>
     );
 
-  if (!plan)
-    return (
-      <div className="flex min-h-screen items-center justify-center gap-2 text-[13px] text-muted">
-        <Loader2 size={16} className="animate-spin" /> Preparing exercise…
-      </div>
-    );
-
   return (
     <>
-      {notice && <div className="border-b border-warn/25 bg-warn-soft px-4 py-2 text-center text-[12.5px] text-warn">{notice}</div>}
-      <ExerciseRunner key={`${plan.id}-${nonce}`} plan={plan} onRestart={() => setNonce((n) => n + 1)} />
+      {loaded.notice && <div className="border-b border-warn/25 bg-warn-soft px-4 py-2 text-center text-[12.5px] text-warn">{loaded.notice}</div>}
+      <ExerciseRunner key={key} plan={loaded.plan} onRestart={() => setNonce((n) => n + 1)} />
     </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 import { ArrowRight, Brain, Hash, Headphones, Mic } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -22,20 +22,22 @@ const TYPE_ICONS: Record<Exclude<ExerciseType, "dialogue">, typeof Brain> = {
 const TYPES: Exclude<ExerciseType, "dialogue">[] = ["memory", "consecutive", "simultaneous", "info-retention"];
 
 export default function PracticeCenterPage() {
+  const { ready } = useData();
+  if (!ready) return <div className="h-64 animate-pulse rounded-xl bg-surface" />;
+  return <PracticeCenter />;
+}
+
+function PracticeCenter() {
   const { prefs, status } = useData();
-  const [config, setConfig] = useState<ExerciseConfig>({
+  const [config, setConfig] = useState<ExerciseConfig>(() => ({
     type: "consecutive",
-    sourceLang: "en",
-    targetLang: "es",
+    sourceLang: prefs.defaultSourceLang,
+    targetLang: otherLang(prefs.defaultSourceLang),
     difficulty: 2,
     subject: "medical",
     length: "medium",
     contentSource: "library",
-  });
-
-  useEffect(() => {
-    setConfig((c) => ({ ...c, sourceLang: prefs.defaultSourceLang, targetLang: otherLang(prefs.defaultSourceLang) }));
-  }, [prefs.defaultSourceLang]);
+  }));
 
   const set = (patch: Partial<ExerciseConfig>) => setConfig((c) => normalizeConfig({ ...c, ...patch, targetLang: patch.targetLang ?? c.targetLang }));
 

@@ -1,7 +1,7 @@
 "use client";
 import { ArrowRight, Clock, Gauge, Layers, ListChecks, Sparkles, Target } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ChartCard } from "@/components/charts/ChartCard";
 import { SERIES } from "@/components/charts/palette";
 import { TrendChart } from "@/components/charts/TrendChart";
@@ -34,9 +34,10 @@ export default function DashboardPage() {
   };
   const next = useMemo(() => recommendNext(visibleSessions, weaknesses, fallback), [visibleSessions, weaknesses]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [now] = useState(() => Date.now());
   const t = totals(visibleSessions);
   const recent = visibleSessions.slice(0, 10);
-  const since = Date.now() - 30 * 86_400_000;
+  const since = now - 30 * 86_400_000;
   const last30 = visibleSessions.filter((s) => new Date(s.createdAt).getTime() >= since);
   const series = dailySeries(last30, ["overall", "semanticAccuracy", "completeness"]);
 
