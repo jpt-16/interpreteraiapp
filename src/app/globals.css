@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — dark navy/charcoal professional interface with a restrained
+ * blue accent. Components use these tokens via Tailwind utilities
+ * (bg-surface, text-muted, border-line, text-accent, ...).
+ */
+@theme {
+  --color-canvas: #0a0d14;
+  --color-surface: #10141d;
+  --color-surface-2: #151a25;
+  --color-surface-3: #1b2230;
+  --color-line: #1f2633;
+  --color-line-strong: #2b3445;
+  --color-ink: #e7ebf2;
+  --color-ink-2: #c3cad6;
+  --color-muted: #8b94a6;
+  --color-faint: #5d6678;
+  --color-accent: #5b8def;
+  --color-accent-strong: #7aa3f5;
+  --color-accent-soft: rgb(91 141 239 / 0.12);
+  --color-good: #3fb68b;
+  --color-good-soft: rgb(63 182 139 / 0.12);
+  --color-warn: #e0a545;
+  --color-warn-soft: rgb(224 165 69 / 0.12);
+  --color-bad: #e5636b;
+  --color-bad-soft: rgb(229 99 107 / 0.12);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+  --animate-fade-in: fade-in 240ms ease-out both;
+  --animate-rise: rise 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgb(229 99 107 / 0.45); }
+  100% { box-shadow: 0 0 0 14px rgb(229 99 107 / 0); }
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgb(91 141 239 / 0.35);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.recording-pulse {
+  animation: pulse-ring 1.4s ease-out infinite;
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
 }
