@@ -63,11 +63,11 @@ function PracticeCenter() {
     <div className="animate-rise">
       <PageHeader title="Practice Center" description="Configure a focused exercise. Difficulty raises speed, length and information density together." />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_340px]">
         <div className="space-y-5">
           <Card>
             <CardHeader title="Exercise type" />
-            <CardBody className="grid gap-3 sm:grid-cols-2">
+            <CardBody className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {TYPES.map((t) => {
                 const info = EXERCISE_TYPES[t];
                 const Icon = TYPE_ICONS[t];
@@ -99,7 +99,7 @@ function PracticeCenter() {
           </Card>
 
           <Card>
-            <CardBody className="grid gap-6 sm:grid-cols-2">
+            <CardBody className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <FieldLabel>Source language</FieldLabel>
                 <Segmented

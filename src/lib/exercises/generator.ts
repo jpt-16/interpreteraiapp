@@ -65,9 +65,16 @@ interface GenSegment {
 
 type Template = (rng: Rng, k: string) => GenSegment;
 
+const usedSurnames = new WeakMap<Rng, Set<string>>();
+
+/** A random person whose surname is unique within the passage being generated. */
 function person(rng: Rng) {
+  const used = usedSurnames.get(rng) ?? new Set<string>();
+  usedSurnames.set(rng, used);
+  const available = LAST.filter((l) => !used.has(l));
+  const last = pick(rng, available.length ? available : LAST);
+  used.add(last);
   const first = pick(rng, FIRST);
-  const last = pick(rng, LAST);
   return { full: `${first} ${last}`, cue: strip(last) };
 }
 
@@ -205,6 +212,26 @@ const TEMPLATES: Record<Subject, Template[]> = {
         probes: [
           { unitId: `${k}b`, question: { en: "Which city did the witness leave?", es: "¿De qué ciudad salió la testigo?" } },
           { unitId: `${k}c`, question: { en: "At what time did she leave?", es: "¿A qué hora salió?" } },
+        ],
+      };
+    },
+    (rng, k) => {
+      const p = person(rng);
+      const d = int(rng, 1, 28);
+      const m = int(rng, 0, 11);
+      const amount = pick(rng, [1200, 3400, 8750, 12000, 18500]);
+      return {
+        en: `On ${fmtDate(d, m, "en")}, ${p.full} signed a settlement for ${fmtNumber(amount, "en")} dollars, payable in 3 installments.`,
+        es: `El ${fmtDate(d, m, "es")}, ${p.full} firmó un acuerdo por ${fmtNumber(amount, "es")} dólares, pagaderos en 3 plazos.`,
+        units: [
+          date(`${k}a`, `Signed ${fmtDate(d, m, "en")}`, dateCues(d, m).en, dateCues(d, m).es, 3),
+          name(`${k}b`, p.full, p.cue, 3),
+          qty(`${k}c`, `Settlement $${amount}`, amount, 3, "settlement|agreement|dollar", "acuerdo|dolar"),
+          num(`${k}d`, "3 installments", 3, 2, "installment|payment", "plazo|pago|cuota"),
+        ],
+        probes: [
+          { unitId: `${k}c`, question: { en: "What was the settlement amount?", es: "¿Por qué importe fue el acuerdo?" } },
+          { unitId: `${k}a`, question: { en: "When was it signed?", es: "¿Cuándo se firmó?" } },
         ],
       };
     },

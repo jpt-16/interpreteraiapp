@@ -64,7 +64,7 @@ export function EvaluationReport({
 
       <Card>
         <CardBody className="flex flex-col gap-6 md:flex-row md:items-center">
-          <ScoreRing score={e.overallScore} size={112} stroke={8} label="Training score" />
+          <ScoreRing score={e.overallScore} size={112} stroke={8} label="Score" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold tracking-tight text-ink">Performance evaluation</h2>
@@ -88,7 +88,7 @@ export function EvaluationReport({
             )}
           </div>
         </CardBody>
-        <div className="grid gap-x-8 gap-y-4 border-t border-line px-5 py-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-4 border-t border-line px-5 py-5 sm:grid-cols-2">
           {(Object.keys(SCORE_LABELS) as ScoreKey[]).map((k) => (
             <ScoreBar key={k} label={SCORE_LABELS[k]} score={e.scores[k]} hint={SCORE_DESCRIPTIONS[k]} />
           ))}
@@ -98,7 +98,7 @@ export function EvaluationReport({
         </p>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Section title="Omitted information" icon={<CircleMinus size={15} className="text-bad" />} count={e.omissions.length} empty="Nothing significant was omitted.">
           <ul className="space-y-2">
             {e.omissions.map((o, i) => (
@@ -188,7 +188,7 @@ export function EvaluationReport({
         </Card>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1fr]">
         <Card>
           <CardHeader title="Delivery" description="Measured from timing and the transcript." />
           <CardBody className="space-y-4 pt-3">
@@ -245,7 +245,7 @@ export function EvaluationReport({
       </div>
 
       {units && units.length > 0 && (
-        <Card>
+        <Card className={showUnits ? undefined : "pb-5"}>
           <CardHeader
             title="Meaning units"
             description="The information the speaker intended to convey, and how each unit came through."
@@ -281,7 +281,7 @@ export function EvaluationReport({
         </Card>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader title="Source speech" />
           <CardBody className="pt-3 text-[13.5px] leading-relaxed text-ink-2">{sourceText}</CardBody>

@@ -102,7 +102,7 @@ export default function AnalyticsPage() {
             <Stat label="Completeness" value={metricMean(filtered, "completeness") ?? "—"} delta={delta(filtered, "completeness")} />
           </div>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
             <ChartCard
               title="Accuracy over time"
               description="Semantic accuracy and absence of unsupported additions"

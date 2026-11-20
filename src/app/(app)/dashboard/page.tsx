@@ -84,7 +84,7 @@ export default function DashboardPage() {
         <Stat label="Completeness" value={metricMean(visibleSessions, "completeness") ?? "—"} icon={<ListChecks size={15} />} sub="Main points present" />
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-5">
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-5">
         <Card className="lg:col-span-2">
           <CardHeader title="Recommended next exercise" description="Chosen by your performance coach from recent results." />
           <CardBody>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
         </ChartCard>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-5">
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-5">
         <Card className="lg:col-span-3">
           <CardHeader
             title="Recent sessions"

@@ -139,7 +139,7 @@ export default function TerminologyPage() {
       />
       {message && <p className="mb-4 text-[13px] text-good">{message}</p>}
 
-      <div className="grid gap-5 lg:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[340px_1fr]">
         <Card className="lg:sticky lg:top-8 lg:self-start">
           <CardHeader title={form.id ? "Edit term" : "Add term"} />
           <CardBody>

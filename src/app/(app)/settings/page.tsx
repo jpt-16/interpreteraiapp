@@ -71,7 +71,7 @@ export default function SettingsPage() {
       <PageHeader title="Settings" description="Profile, playback, privacy and integrations." />
       {notice && <div className="mb-4 rounded-lg border border-good/30 bg-good-soft px-4 py-2 text-[13px] text-good">{notice}</div>}
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader title="Profile & languages" />
           <CardBody className="space-y-5">

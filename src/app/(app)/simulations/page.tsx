@@ -18,7 +18,7 @@ export default function SimulationsPage() {
         description="Dialogue interpreting between two parties. Switch direction every turn, as in a real assignment."
       />
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         {SCENARIOS.map((s) => {
           const href = `/exercise?${configToParams({
             type: "dialogue",

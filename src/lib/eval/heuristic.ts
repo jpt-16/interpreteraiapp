@@ -69,10 +69,17 @@ export function evaluateHeuristic(req: EvaluationRequest): Evaluation {
   // 3. Pair missing numeric units with unexplained numbers → distortions
   const errors: Evaluation["errors"] = [];
   const pool = [...unexplained];
-  for (const u of exercise.units) {
-    if (!NUMERIC.includes(u.category) || u.value === undefined || status.get(u.id) !== "omitted") continue;
+  const rendered = (id?: string) => {
+    const s = id ? status.get(id) : undefined;
+    return s === "conveyed" || s === "partial";
+  };
+  exercise.units.forEach((u, i) => {
+    if (!NUMERIC.includes(u.category) || u.value === undefined || status.get(u.id) !== "omitted") return;
     const ctx = cueScore(u.cues[target], tokens);
-    if (ctx !== null && ctx === 0) continue;
+    if (ctx !== null && ctx === 0) return;
+    // Only treat a wrong figure as a distortion when the surrounding content was rendered;
+    // otherwise the unit was simply omitted and any stray figure is an addition.
+    if (!rendered(exercise.units[i - 1]?.id) && !rendered(exercise.units[i + 1]?.id)) return;
     let bestIdx = -1;
     let bestRatio = Infinity;
     pool.forEach((m, idx) => {
@@ -95,7 +102,7 @@ export function evaluateHeuristic(req: EvaluationRequest): Evaluation {
         severity: sev(u.weight),
       });
     }
-  }
+  });
   for (const u of exercise.units) {
     if (status.get(u.id) === "distorted" && u.category === "date") {
       errors.push({

@@ -370,7 +370,7 @@ export function ExerciseRunner({ plan, onRestart }: { plan: ExercisePlan; onRest
                     </span>
                   </div>
                 )}
-                <div className="grid gap-3 text-[12.5px] text-muted sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 text-[12.5px] text-muted sm:grid-cols-3">
                   <div className="rounded-lg border border-line px-3 py-2">
                     <div className="text-faint">Passage</div>
                     <div className="tabular text-ink-2">
@@ -425,10 +425,14 @@ export function ExerciseRunner({ plan, onRestart }: { plan: ExercisePlan; onRest
                   {player.state === "loading" && <p className="mt-3 text-center text-[12.5px] text-muted">Preparing audio…</p>}
                   {player.error && (
                     <div className="mt-3 text-center text-[12.5px] text-bad">
-                      {player.error}{" "}
-                      <button className="underline" onClick={() => setPhase("ready")}>
-                        Continue without audio
-                      </button>
+                      Audio could not be played in this browser ({player.error.replace(/^Speech synthesis error: /, "")}).{" "}
+                      {phase === "listening" && !isSimul ? (
+                        <button className="underline" onClick={() => setPhase((p) => (p === "listening" ? "ready" : p))}>
+                          Continue without audio
+                        </button>
+                      ) : (
+                        <span className="text-muted">Try Chrome, Edge or Safari, or configure a server voice in Settings.</span>
+                      )}
                     </div>
                   )}
                   {phase === "listening" && !isSimul && player.state === "playing" && (
