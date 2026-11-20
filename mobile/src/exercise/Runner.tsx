@@ -150,7 +150,7 @@ export function ExerciseRunner({ plan, onRestart, banner }: { plan: ExercisePlan
     }
     setPhase("listening");
     sourceStart.current = Date.now();
-    const secs = await audio.play({ segments: current.segments, lang: current.sourceLang, rate: plan.speechRate });
+    const secs = await audio.play({ segments: current.segments, lang: current.sourceLang, rate: plan.speechRate, duplex: recording });
     listenSec.current += secs;
     if (recording) {
       setSimulEnded(true);

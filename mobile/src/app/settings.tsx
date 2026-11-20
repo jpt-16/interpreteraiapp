@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { useState } from "react";
 import { Alert, Share, Switch, View } from "react-native";
 import { useData } from "~/data/store";
@@ -131,7 +130,7 @@ export default function SettingsScreen() {
             onPress={() =>
               Alert.alert("Sign out?", undefined, [
                 { text: "Cancel", style: "cancel" },
-                { text: "Sign Out", style: "destructive", onPress: async () => (await signOut(), router.dismissAll()) },
+                { text: "Sign Out", style: "destructive", onPress: () => signOut() },
               ])
             }
           />

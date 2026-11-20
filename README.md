@@ -2,7 +2,14 @@
 
 A training platform for working interpreters and advanced trainees. It is **not** a language-learning app: users already know their languages. It trains short-term auditory memory, active listening, consecutive and simultaneous interpreting, completeness, fidelity (no unsupported additions), numbers and names, terminology and delivery under cognitive load — and evaluates renditions by **meaning**, not word overlap.
 
-Built with Next.js 16 (App Router), TypeScript, Tailwind CSS v4, Supabase, and Claude for evaluation.
+**Two parts, one codebase:**
+
+| Part | What it is |
+|---|---|
+| [`mobile/`](mobile/README.md) | **The app.** Expo / React Native, iOS-first, designed to Apple's Human Interface Guidelines. |
+| repo root | The **API** the app calls (evaluation, transcription, voices, passage writing; holds the Gemini key) and a desktop **web version** of the same product. Built with Next.js 16, TypeScript, Tailwind CSS v4, Supabase. |
+
+AI runs on **Google Gemini** through a single server-side key: evaluation, passage writing, speech-to-text and text-to-speech. The key never reaches the app.
 
 ## Quick start
 
@@ -16,13 +23,15 @@ With no environment variables the app runs fully in **demo mode**:
 
 | Capability | Live (configured) | Demo fallback (clearly labelled in the UI) |
 |---|---|---|
-| Accounts & history | Supabase auth + Postgres with RLS | Browser `localStorage` |
-| Performance evaluation | Claude (`ANTHROPIC_API_KEY`) | Heuristic concept-matching against annotated meaning units |
+| Accounts & history | Supabase auth + Postgres with RLS | Browser / device storage |
+| Performance evaluation | Gemini (`GEMINI_API_KEY`) | Heuristic concept-matching against annotated meaning units |
 | Passage content | Curated library + AI-written passages | Curated bilingual library + procedural detail briefings |
-| Speech-to-text | OpenAI or Deepgram adapter | Browser Web Speech API, or typed rendition |
-| Text-to-speech | OpenAI or ElevenLabs adapter | Browser `speechSynthesis` voices |
+| Speech-to-text | Gemini audio understanding (OpenAI / Deepgram adapters also included) | Web: browser recognition. Mobile: typed or keyboard-dictated rendition |
+| Text-to-speech | Gemini TTS (OpenAI / ElevenLabs adapters also included) | Browser / iPhone built-in voices |
 
-**Settings → Integrations** shows exactly which services are live and which environment variables each one needs. API keys are only read server-side (`src/lib/config/env.ts`, `src/lib/speech/server.ts`, `src/lib/eval/anthropic.ts`); the client only ever sees booleans from `/api/status`.
+**Settings → Integrations** (web) and **Settings → Services** (mobile) show exactly which services are live and which environment variables each one needs. API keys are only read server-side (`src/lib/config/env.ts`, `src/lib/ai/gemini.ts`, `src/lib/speech/server.ts`); clients only ever see booleans from `/api/status`.
+
+**Protecting the API.** The AI endpoints spend your Gemini quota, so they are guarded (`src/lib/api/guard.ts`): with Supabase configured, callers must be signed in (web cookie or `Authorization: Bearer` from the app); without it, set `API_ACCESS_TOKEN` and send it as `x-api-key`. A per-caller rate limit applies as well. Do not deploy with a Gemini key and neither protection.
 
 ## Scripts
 
@@ -61,11 +70,13 @@ With no environment variables the app runs fully in **demo mode**:
 - per-unit status (conveyed / partial / omitted / distorted), delivery stats, detail-check results and recommended follow-up exercises;
 - a disclaimer that scores are training feedback, not certification.
 
-**Claude provider** (`anthropic.ts`) uses structured outputs (Zod schema) with adaptive thinking, `claude-opus-5-5` by default (`ANTHROPIC_EVAL_MODEL`, `ANTHROPIC_EVAL_EFFORT`), and server-side refusal fallbacks. The prompt instructs the model to judge meaning, to treat reformulation as acceptable, to be exact about figures, and to tolerate obvious speech-recognition artefacts. Fluency is measured deterministically from timing and the transcript (pace, fillers, restarts), not guessed by the model. If the AI call fails, the heuristic result is returned with a visible warning.
+**Gemini provider** (`gemini.ts`, `gemini-spec.ts`) asks `gemini-3.8-flash` (override with `GEMINI_EVAL_MODEL`; try a Flash-Lite model to cut cost further) for schema-constrained JSON, validates it with Zod, and maps it to the `Evaluation` type. The prompt instructs the model to judge meaning, to treat reformulation as acceptable, to be exact about figures, and to tolerate obvious speech-recognition artefacts; the rendition is fenced as data. Fluency is measured deterministically from timing and the transcript (pace, fillers, restarts), not guessed by the model. If the AI call fails, the heuristic result is returned with a visible warning. The schema, prompts and mapping are unit-tested without a network (`tests/gemini.test.ts`); **the live Gemini calls themselves have not been exercised in this repository's CI or sandbox**, so run one real evaluation and one real transcription after adding your key.
 
 **Heuristic demo provider** (`heuristic.ts`) never compares word overlap. It matches bilingual concept cues per meaning unit, normalises numbers in both languages (spelled-out, decimals, scales, times, `48,6 millones` = `48.6 million`), detects changed figures, unsupported figures and embellishment, and is tested in `tests/evaluation.test.ts`.
 
 To try another model or vendor, add a provider to the registry and select it with `EVALUATION_PROVIDER`.
+
+**Cost and privacy.** The heuristic evaluator is free and runs on-device in the mobile app. Server audio for passages is cached on the device per (text, language, rate), so repeated passages are not re-synthesised. On Gemini's free tier, Google's terms may allow prompts and responses to be used to improve its products; for confidential interpreting material use a paid key and check the current terms.
 
 ## Personalised coach
 
@@ -114,16 +125,19 @@ src/
     (app)/            dashboard, practice, simulations, analytics, analytics/[id], terminology, settings
     exercise/         distraction-free exercise runner
     login/, auth/callback/
-    api/              status, evaluate, transcribe, tts, passages/generate, cron/purge-recordings
+    api/              status, evaluate, transcribe, tts, passages/generate, cron/purge-recordings (guarded)
   components/
     exercise/         ExerciseRunner, EvaluationReport, waveforms, usePassagePlayer, useRecorder
     charts/ ui/ shell/ sessions/ coach/
   lib/
-    exercises/        catalog, bilingual passage library, detail generator, dialogue scenarios, builder, AI generation
-    eval/             provider registry, Claude provider, heuristic provider, number/text normalisation
-    speech/           server STT/TTS adapters, browser speech fallbacks
+    exercises/        catalog, bilingual passage library, detail generator, dialogue scenarios, builder, plan, AI generation
+    eval/             provider registry, Gemini provider, heuristic provider, number/text normalisation
+    ai/               Gemini client + schema-validated JSON helper
+    api/              request guard (auth + rate limit)
+    speech/           server STT/TTS adapters (Gemini, OpenAI, Deepgram, ElevenLabs), WAV helper, browser fallbacks
     coach/ analytics/ data/ (repository interface, local + Supabase implementations, sample data) supabase/
   proxy.ts            auth session refresh / route protection
+mobile/                the Expo app; imports pure logic from ../src/lib (see mobile/README.md)
 supabase/migrations/  schema, RLS, storage policies
 tests/                evaluator and coach tests
 ```
@@ -133,6 +147,7 @@ The UI depends only on the `Repository` interface (`src/lib/data/repository.ts`)
 ## Known limitations / next steps
 
 - Adaptive AI role-play (parties that react to the rendition in real time) is the next milestone; scripted dialogue simulations work today.
-- Browser speech recognition quality varies by browser and is unavailable in Firefox; typed renditions are always possible (fluency is then not scored).
-- Ear-voice span is approximated from the first recognised word; word-level timestamps from a server STT provider would make it precise.
+- Web: browser speech recognition quality varies and is unavailable in Firefox; typed renditions are always possible (fluency is then not scored).
+- The mobile app has been type-checked, bundled for iOS (Hermes) and exercised through its web export; it has **not** been run on an iPhone or simulator. See `mobile/README.md` → Verification.
+- Ear-voice span (décalage) is only measured by the web version; the mobile app does not yet report it.
 - Only English and Spanish are supported; the content and evaluation layers are language-pair-generic.

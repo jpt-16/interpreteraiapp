@@ -13,6 +13,8 @@ interface Passage {
   segments: string[];
   lang: Lang;
   rate: number;
+  /** True while the microphone is recording (simultaneous interpreting): keep the audio session in record+play mode. */
+  duplex?: boolean;
 }
 
 const wordsOf = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
@@ -88,7 +90,7 @@ export function useSourceAudio(useServerVoice: boolean) {
     }
   }, []);
 
-  const playServer = useCallback(async ({ segments, lang, rate }: Passage) => {
+  const playServer = useCallback(async ({ segments, lang, rate, duplex }: Passage) => {
     const text = segments.join(" ");
     const key = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `${lang}|${rate}|${text}`);
     const dir = new Directory(Paths.cache, "tts");
@@ -100,7 +102,7 @@ export function useSourceAudio(useServerVoice: boolean) {
       file.create();
       file.write(audio.bytes);
     }
-    await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false });
+    await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: Boolean(duplex) });
     const player = createAudioPlayer(file.uri);
     playerRef.current = player;
     await new Promise<void>((resolve, reject) => {
