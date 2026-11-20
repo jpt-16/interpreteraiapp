@@ -195,7 +195,7 @@ export const LIBRARY: LibraryPassage[] = [
         es: "El crecimiento se debió principalmente a nuestro negocio de suscripciones en América Latina, donde sumamos unos 9000 nuevos clientes corporativos.",
         units: [
           idea("b5", "Driven by subscription business", "subscript", "suscrip", 3),
-          name("b6", "Latin America", "latin america|latam", 3),
+          name("b6", "Latin America", "latin america|latinoamer|latam|america latina", 3),
           qty("b7", "About 9,000 new corporate clients", 9000, 3, "client|customer", "client"),
         ],
       },
