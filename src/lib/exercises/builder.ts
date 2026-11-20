@@ -29,7 +29,10 @@ function choosePassage(config: ExerciseConfig, seed: number, avoidIds: string[] 
   const bySubject = LIBRARY.filter((p) => p.subject === config.subject);
   const pool = bySubject.length ? bySubject : LIBRARY;
   const scored = pool
-    .map((p) => ({ p, d: Math.abs(p.difficulty - config.difficulty) + (avoidIds.includes(p.id) ? 0.5 : 0) }))
+    .map((p) => ({ p, d:
+        Math.abs(p.difficulty - config.difficulty) +
+        (avoidIds.includes(p.id) || avoidIds.includes(p.title.en) || avoidIds.includes(p.title.es) ? 0.5 : 0),
+    }))
     .sort((a, b) => a.d - b.d);
   const best = scored.filter((s) => s.d === scored[0].d);
   return best[seed % best.length].p;
