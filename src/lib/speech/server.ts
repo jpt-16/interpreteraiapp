@@ -1,6 +1,9 @@
 import "server-only";
-import { integrationStatus } from "@/lib/config/env";
+import { getGemini } from "@/lib/ai/gemini";
+import { GEMINI_MODELS, integrationStatus } from "@/lib/config/env";
+import { LANGUAGES } from "@/lib/exercises/catalog";
 import type { Lang } from "@/lib/types";
+import { paceInstruction, pcmToWav } from "./wav";
 
 /**
  * Replaceable server-side speech adapters.
@@ -14,6 +17,66 @@ export interface SttAdapter {
   id: string;
   transcribe(audio: Blob, lang: Lang): Promise<string>;
 }
+
+const toBase64 = (buf: ArrayBuffer) => Buffer.from(buf).toString("base64");
+
+/** Mobile recorders produce WAV (iOS) or AAC/M4A (Android); Gemini needs a mime type it recognises. */
+function audioMime(type: string) {
+  const t = type.toLowerCase();
+  if (t.includes("wav") || t.includes("wave")) return "audio/wav";
+  if (t.includes("mpeg") || t.includes("mp3")) return "audio/mp3";
+  if (t.includes("ogg")) return "audio/ogg";
+  if (t.includes("flac")) return "audio/flac";
+  if (t.includes("aiff")) return "audio/aiff";
+  return "audio/aac"; // m4a / mp4 / aac
+}
+
+const geminiStt: SttAdapter = {
+  id: "gemini",
+  async transcribe(audio, lang) {
+    const language = LANGUAGES[lang].label;
+    const res = await getGemini().models.generateContent({
+      model: GEMINI_MODELS.stt(),
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `Transcribe this recording verbatim. The speaker is an interpreter rendering a speech into ${language}. Write exactly what was said in ${language}: keep filler words (um, uh, eh, este), false starts, repetitions and self-corrections; do not fix grammar, summarise, translate or add anything. Write numbers as spoken. If there is no speech, return an empty string. Output only the transcript.`,
+            },
+            { inlineData: { mimeType: audioMime(audio.type), data: toBase64(await audio.arrayBuffer()) } },
+          ],
+        },
+      ],
+      config: { maxOutputTokens: 4096 },
+    });
+    return (res.text ?? "").trim();
+  },
+};
+
+const geminiTts: TtsAdapter = {
+  id: "gemini",
+  async synthesize(text, lang, rate) {
+    const voice = process.env.GEMINI_TTS_VOICE || "Kore";
+    const res = await getGemini().models.generateContent({
+      model: GEMINI_MODELS.tts(),
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: `Read the following ${LANGUAGES[lang].label} speech aloud ${paceInstruction(rate)}, in a clear, neutral, professional voice. Do not add, omit or change any words:\n\n${text}` }],
+        },
+      ],
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
+      },
+    });
+    const data = res.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData?.data;
+    if (!data) throw new Error("Gemini returned no audio");
+    const wav = pcmToWav(new Uint8Array(Buffer.from(data, "base64")), 24000, 1);
+    return { audio: wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength) as ArrayBuffer, contentType: "audio/wav" };
+  },
+};
 
 export interface TtsAdapter {
   id: string;
@@ -100,8 +163,8 @@ const elevenlabsTts: TtsAdapter = {
   },
 };
 
-const STT: Record<string, SttAdapter> = { openai: openaiStt, deepgram: deepgramStt };
-const TTS: Record<string, TtsAdapter> = { openai: openaiTts, elevenlabs: elevenlabsTts };
+const STT: Record<string, SttAdapter> = { gemini: geminiStt, openai: openaiStt, deepgram: deepgramStt };
+const TTS: Record<string, TtsAdapter> = { gemini: geminiTts, openai: openaiTts, elevenlabs: elevenlabsTts };
 
 export function getSttAdapter(): SttAdapter | null {
   const s = integrationStatus().stt;

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { guard } from "@/lib/api/guard";
 import { getTtsAdapter } from "@/lib/speech/server";
 
 export const maxDuration = 60;
 
 /** Server text-to-speech. Returns 501 when no provider is configured (client uses browser speech). */
 export async function POST(request: Request) {
+  const denied = await guard(request, "tts", 20);
+  if (denied) return denied;
   const adapter = getTtsAdapter();
   if (!adapter) return NextResponse.json({ error: "No text-to-speech provider configured", demo: true }, { status: 501 });
   const body = (await request.json().catch(() => null)) as { text?: string; lang?: string; rate?: number } | null;

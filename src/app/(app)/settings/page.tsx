@@ -199,25 +199,25 @@ export default function SettingsPage() {
                       ? `Meaning-based evaluation with ${status.evaluation.model}.`
                       : "Using the demo heuristic evaluator (concept matching against annotated meaning units)."
                   }
-                  env="ANTHROPIC_API_KEY"
+                  env="GEMINI_API_KEY"
                 />
                 <Row
                   ok={status.passageGeneration.live}
                   name="AI passage generation"
                   detail={status.passageGeneration.live ? "Fresh annotated passages on demand." : "Using the curated passage library and procedural detail briefings."}
-                  env="ANTHROPIC_API_KEY"
+                  env="GEMINI_API_KEY"
                 />
                 <Row
                   ok={status.stt.live}
                   name="Speech-to-text"
                   detail={status.stt.live ? `Server transcription via ${status.stt.provider}.` : "Using the browser's built-in speech recognition (Chrome, Edge, Safari)."}
-                  env="OPENAI_API_KEY or DEEPGRAM_API_KEY (STT_PROVIDER)"
+                  env="GEMINI_API_KEY (or OPENAI_API_KEY / DEEPGRAM_API_KEY)"
                 />
                 <Row
                   ok={status.tts.live}
                   name="Text-to-speech"
                   detail={status.tts.live ? `Studio voices via ${status.tts.provider}.` : "Using the browser's built-in voices."}
-                  env="OPENAI_API_KEY or ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID (TTS_PROVIDER)"
+                  env="GEMINI_API_KEY (or OPENAI_API_KEY / ELEVENLABS_API_KEY)"
                 />
                 <Row
                   ok={status.recordingPurge}

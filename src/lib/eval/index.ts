@@ -1,7 +1,7 @@
 import "server-only";
 import { integrationStatus } from "@/lib/config/env";
 import type { Evaluation } from "@/lib/types";
-import { evaluateWithClaude } from "./anthropic";
+import { evaluateWithGemini } from "./gemini";
 import { evaluateHeuristic } from "./heuristic";
 import type { EvaluationRequest } from "./types";
 
@@ -15,7 +15,7 @@ export interface EvaluationProvider {
 }
 
 const providers: Record<string, EvaluationProvider> = {
-  anthropic: { id: "anthropic", evaluate: evaluateWithClaude },
+  gemini: { id: "gemini", evaluate: evaluateWithGemini },
   "demo-heuristic": { id: "demo-heuristic", evaluate: async (req) => evaluateHeuristic(req) },
 };
 

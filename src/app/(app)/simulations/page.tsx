@@ -73,7 +73,7 @@ export default function SimulationsPage() {
             <div className="text-[14px] font-medium text-ink">Adaptive AI role-play</div>
             <p className="mt-0.5 text-[13px] leading-relaxed text-muted">
               Next on the roadmap: AI-voiced parties that react to your rendition in real time, with interruptions and clarification requests.
-              It will use the same Claude integration as evaluation{status?.evaluation.live ? ", which is already configured" : " (requires ANTHROPIC_API_KEY)"}.
+              It will use the same Gemini integration as evaluation{status?.evaluation.live ? ", which is already configured" : " (requires GEMINI_API_KEY)"}.
               The scripted scenarios above are fully functional today.
             </p>
           </div>

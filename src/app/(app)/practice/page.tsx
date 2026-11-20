@@ -175,7 +175,7 @@ function PracticeCenter() {
                 />
               </div>
               <div>
-                <FieldLabel hint={!aiLive ? "AI needs ANTHROPIC_API_KEY" : undefined}>Content</FieldLabel>
+                <FieldLabel hint={!aiLive ? "AI needs GEMINI_API_KEY" : undefined}>Content</FieldLabel>
                 <Segmented
                   ariaLabel="Content source"
                   value={config.contentSource === "ai" ? "ai" : "standard"}

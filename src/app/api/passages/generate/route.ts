@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guard } from "@/lib/api/guard";
 import { integrationStatus } from "@/lib/config/env";
 import { normalizeConfig } from "@/lib/exercises/builder";
 import { generatePassage } from "@/lib/exercises/ai-generate";
@@ -6,8 +7,10 @@ import type { ExerciseConfig } from "@/lib/types";
 
 export const maxDuration = 120;
 
-/** Generates a fresh, annotated source passage with Claude. 501 when no API key is configured. */
+/** Generates a fresh, annotated source passage with Gemini. 501 when no API key is configured. */
 export async function POST(request: Request) {
+  const denied = await guard(request, "generate", 10);
+  if (denied) return denied;
   if (!integrationStatus().passageGeneration.live) {
     return NextResponse.json({ error: "AI passage generation is not configured", demo: true }, { status: 501 });
   }
